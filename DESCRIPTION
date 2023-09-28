@@ -1,0 +1,26 @@
+Package: c64asm
+Type: Package
+Title: 6502 Assembler 
+Version: 0.1.4
+Author: mikefc
+Authors@R: person("Mike", "C", role = c('cre', 'aut'), email='mikefc@coolbutuseless.com')
+Maintainer: mikefc <mikefc@coolbutuseless.com>
+Description: A simple 6502 assembler written purely in R and leveraging R 
+    data structures for pre-computing character sets and images.
+License: file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+Depends:
+    R (>= 2.10)
+Imports:
+  stringi,
+  dplyr,
+  purrr
+Suggests: testthat,
+    knitr,
+    rmarkdown,
+    jpeg,
+    magick,
+    glue
+VignetteBuilder: knitr

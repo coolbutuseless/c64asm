@@ -1,0 +1,237 @@
+---
+title: "ASCII art on the c64 via R"
+author: "mikefc@coolbutuseless.com"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ASCII art on the c64 via R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(magick)
+  library(c64asm)
+})
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+ASCII
+------------------------------------------------------------------------------
+
+In this vignette, we are going to:
+
+* generate a 25 x 40 character ASCII representation of the R logo
+* Incorporate that text into an R program using the `c64asm` package and the R-specific `.rtext` directive
+* Compile the code and run it in an emulator (VICE)
+
+
+
+`c64asm` - Using the `.rtext` directive
+------------------------------------------------------------------------------
+
+One of the reasons to write this compiler in R is that R-specific ways of 
+introducing data into the program can be included.
+
+In this example, the `.rtext` directive is used to include text in a program 
+that is taken directly from an R variable containing a string.
+
+
+
+```{r, eval=TRUE, echo=FALSE}
+#-----------------------------------------------------------------------------
+# Create very small ASCII art suitable for a c64 screen
+#
+# c64 screens display 25x40 characters (1000 characters in total). This function
+# uses the `magick` package to load and resize an image and then uses R
+# to convert that into the ascii characters specified in the \code{alphabet} argument.
+#
+# @param alphabet defines the characters which will appear in the image. Must be specified in
+#                 order of visual density for the output to look like input
+# @param image_filename full path to image. will be loaded by \code{magick::image_read}
+# @param invert boolean. whether to reverse the alphabet. default FALSE
+#
+# @return character matrix of size 25x40
+#
+# @import magick
+# @export
+#-----------------------------------------------------------------------------
+create_ascii_art <- function(
+  alphabet  =  ' .:-=+*#%@',
+  image     = jpeg::readJPEG(system.file('img/Rlogo.jpg',package='jpeg')),
+  invert    = TRUE
+) {
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Keep just the green channel
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  im <- image[,,3]
+  
+  #-----------------------------------------------------------------------------
+  # Some character set in density order.
+  # Depending on white-on-black or black-on-white,
+  # the order may need to be reversed
+  #-----------------------------------------------------------------------------
+  C <- (strsplit(alphabet,'')[[1]])
+  if (invert) {C <- rev(C)}
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Scale the image
+  #
+  # This is simple and ugly as the display resolution is so low that it 
+  # doesn't really matter here.
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  row_sub <- seq(1, nrow(im), length.out = 25)
+  col_sub <- seq(1, ncol(im), length.out = 40)
+  im      <- im[row_sub, col_sub]
+
+
+
+  #-----------------------------------------------------------------------------
+  # Use a different character for each grey level
+  #-----------------------------------------------------------------------------
+  im[] <- cut(im, breaks = length(C), labels = FALSE)
+  im[] <- C[im]
+
+  im
+}
+```
+
+
+
+
+Create very small ASCII art (25 x 40)
+------------------------------------------------------------------------------
+
+* See end of this vignette for the `create_ascii_art()` function which creates
+  a 25 x 40 character matrix as an ascii version of the given image
+* Note: 25 x 40 is the height and width of the c64 character display.
+
+```{r}
+im <- create_ascii_art(image  = jpeg::readJPEG(system.file('img/Rlogo.jpg',package='jpeg')))
+cat(apply(im, 1, paste,collapse=''), sep='\n')
+```
+
+
+Incorporate text from R into a c64 program
+------------------------------------------------------------------------------
+
+* The full character matrix is 1000 characters.
+* c64 is an 8bit computer (8bits = 0-255), so indexing into a vector that is 1000 long is not straightforward.
+* Split the text message into 4 vectors of 250 character each
+
+```{r}
+#-----------------------------------------------------------------------------
+# Convert to 4 strings, each with 250 chars, so that we can loop
+# over them on an 8-bit computer
+#-----------------------------------------------------------------------------
+rchars    <- as.vector(t(im))
+rmessage1 <- rchars[  1:250] %>% paste(collapse='')
+rmessage2 <- rchars[251:500] %>% paste(collapse='')
+rmessage3 <- rchars[501:750] %>% paste(collapse='')
+rmessage4 <- rchars[751:999] %>% paste(collapse='')
+```
+
+
+
+```{r}
+
+asm <- '*=$0801
+.byte $0c, $08, $0a, $00, $9e, $20  ; 10 SYS 2080
+.byte $32, $30, $38, $30, $00, $00
+.byte $00
+*=$0820
+  lda #$93              ; clear the screen
+  jsr $ffd2
+
+  lda #$0e              ; Switch to lowercase/upperase character mode
+  jsr $ffd2
+
+
+  lda #$01              ; set text to white
+  sta $0286
+
+  ldy #$00              ; initialise offset index
+  loop1 lda message1,y  ; load the character in message1 at this offset
+  jsr $ffd2             ; use kernal routine to put character on screen
+  iny                   ; repeat ...
+  cpy #$fa              ;        ... 250 times
+  bne loop1
+
+  ldy #$00              ; now do the same for message2 text
+loop2
+  lda message2,y
+  jsr $ffd2
+  iny
+  cpy #$fa
+  bne loop2
+
+  ldy #$00              ; now do the same for message3 text
+loop3
+  lda message3,y
+  jsr $ffd2
+  iny
+  cpy #$fa
+  bne loop3
+
+  ldy #$00              ; now do the same for message4 text
+loop4
+  lda message4,y
+  jsr $ffd2
+  iny
+  cpy #$f9
+  bne loop4
+
+
+wait
+  jmp wait
+
+message1
+  .rtext rmessage1   ; ".rtext" instructions are directives to include the contents of a string from R at this location
+message2
+  .rtext rmessage2
+message3
+  .rtext rmessage3
+message4
+  .rtext rmessage4
+'
+```
+
+
+
+Compile ASM code to PRG
+------------------------------------------------------------------------------
+
+```{r eval=FALSE}
+library(c64asm)
+
+prg <- c64asm::compile(asm)
+prg
+```
+
+
+
+Run code in an emulator
+------------------------------------------------------------------------------
+
+```{r eval=FALSE}
+library(c64vice)
+
+# Start VICE with 'x64sc -binarymonitor'
+# Then transfer bytes to VICE and run the program with the following:
+c64vice::run_prg(prg)
+```
+
+
+```{r echo=FALSE, eval=FALSE}
+c64vice::save_screenshot("vignettes/img/ascii.png")
+```
+
+
+<img src="img/ascii.png" width="90%" />
+

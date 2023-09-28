@@ -1,0 +1,143 @@
+---
+title: "parse_opcodes"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+suppressPackageStartupMessages({
+  library(magrittr)
+  library(tidyverse)
+  library(rvest)
+  library(httr)
+  library(xml2)
+})
+
+options(max.print = 1000000)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+# h <- xml2::read_html('http://www.oxyron.de/html/opcodes02.html')
+h <- xml2::read_html("opcodes.html")
+```
+
+
+Address types
+------------------------------------------------------------------------------
+
+imm = #$00
+zp = $00
+zpx = $00,X
+zpy = $00,Y
+izx = ($00,X)
+izy = ($00),Y
+abs = $0000
+abx = $0000,X
+aby = $0000,Y
+ind = ($0000)
+rel = $0000 (PC-relative) 
+
+
+
+```{r}
+mode_df <- readr::read_csv(
+'mode, mode_desc    , mode_template       
+imp  , implied      , 
+imm  , immediate    ,"#$00"
+zp   , zero page    ,"$00"
+zpx  , zero page x  ,"$00,X"
+zpy  , zero page y  ,"$00,Y"
+izx  , indirect x   ,"($00,X)"
+izy  , indirect y   ,"($00),Y"
+abs  , absolute     ,"$0000"
+abx  , absolute x   ,"$0000,X"
+aby  , absolute y   ,"$0000,Y"
+ind  , indirect     ,"($0000)"
+rel  , relative     ,"$000o0"
+')
+```
+
+
+
+
+Flags of the status register:
+------------------------------------------------------------------------------
+
+The processor status register has 8 bits, where 7 are used as flags:
+
+N = negative flag (1 when result is negative)
+V = overflow flag (1 on signed overflow)
+# = unused (always 1)
+B = break flag (1 when interupt was caused by a BRK)
+D = decimal flag (1 when CPU in BCD mode)
+I = IRQ flag (when 1, no interupts will occur (exceptions are IRQs forced by BRK and NMIs))
+Z = zero flag (1 when all bits of a result are 0)
+C = carry flag (1 on unsigned overflow)
+
+
+
+```{r}
+tables <- h %>% html_nodes('table')
+
+# html_table(tables[1])
+logical_and_arithmetic <- html_table(tables[2])[[1]] %>% set_names(.[1,]) %>% filter(row_number() != 1) %>% mutate(type='logical')
+move                   <- html_table(tables[3])[[1]] %>% set_names(.[1,]) %>% filter(row_number() != 1) %>% mutate(type='move')
+jump_flag              <- html_table(tables[4])[[1]] %>% set_names(.[1,]) %>% filter(row_number() != 1) %>% mutate(type='jump')
+illegal_opcodes        <- html_table(tables[5])[[1]] %>% set_names(.[1,]) %>% filter(row_number() != 1) %>% mutate(type='illegal')
+
+
+opcodes <- dplyr::bind_rows(logical_and_arithmetic, move, jump_flag, illegal_opcodes) %>%
+  rename(
+    op   = Opcode,
+    desc = Function
+  )
+
+
+opcodes %<>% 
+  gather(mode, hex, imp:rel) %>%
+  filter(hex != '') %>%
+  arrange(hex) %>% 
+  left_join(mode_df, by='mode') %>%
+  mutate(
+    dec = strtoi(gsub("\\$", '0x', hex))
+  ) %>%
+  as.tbl
+
+opcodes
+
+```
+
+
+```{r}
+opcodes %<>% mutate(
+  op = tolower(op)
+) %>%
+  rename(opmode = mode_desc)
+```
+
+
+```{r}
+readr::write_delim(opcodes, "opcodes.tsv", delim="\t")
+
+devtools::use_data(opcodes, overwrite=TRUE)
+```
+
+
+```{r}
+ops      <- sort(unique(opcodes$op)) 
+ops      <- stringr::str_sub(ops, end=3)
+lowerops <- tolower(ops)
+
+opcode_pattern <- paste0("\\b(", paste(c(ops, lowerops), collapse="|"), ")\\b")
+
+opcode_pattern
+# devtools::use_data(opcode_pattern, overwrite=TRUE)
+```
+
+
+
+
+

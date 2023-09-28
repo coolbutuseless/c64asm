@@ -1,0 +1,10 @@
+.Rhistory
+*.Rproj
+.Rproj.user
+*.swp
+working
+inst/doc
+README.html
+/docs
+doc
+Meta

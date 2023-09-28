@@ -1,0 +1,86 @@
+---
+title: "c64asm ASM syntax"
+author: "mikefc"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{c64asm ASM syntax}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+Syntax overview
+------------------------------------------------------------------------------
+
+The basic syntax of 6502 assemblers are mostly the same.  For `c64asm` 
+the basic syntax is modelled on [TASS64](http://tass64.sourceforge.net/).
+
+Extensions to this basic syntax have been made to include some **R specific** features 
+for easier passing of data to the assembler
+
+Values - hexademical only
+------------------------------------------------------------------------------
+
+* hexadecimal bytes must be 1 or 2 characters, and must be preceded by `$` e.g.
+    * allowed: $01, $f0
+    * not allowed: $1, $f00, ff
+* two-byte hexadecimal values must be 3 or 4 characters, and must be preceded by `$` e.g.
+    * allowed: $0001, $d0f0
+    * not allowed: $1, d0f0
+    
+    
+
+
+
+Variables (include the program counter `*`)
+------------------------------------------------------------------------------
+
+* variables should be alphanumeric and not contain spaces
+* values assigned with `=`, e.g.
+    * `* = $0820`
+    * `border = $d020`
+
+
+Address labels
+------------------------------------------------------------------------------
+
+* address labels should be alphanumeric and not contain spaces
+
+
+R-specific: `.rtext`
+------------------------------------------------------------------------------
+
+* if the variable `mystring` is a character string in the R session, then this
+  may be included into the assembly code using:
+    * `.rtext mystring`
+
+
+R-specific: `.byte`
+------------------------------------------------------------------------------
+
+* if the variable `mybytes` is an integer vector in the R session, then this
+  may be included into the assembly code using:
+    * `.rbyte mbytes`
+* The vector must be `integer`
+* The values must be in the range 0-255
+
+
+R-specific: `{...}` for evaluated expressions
+------------------------------------------------------------------------------
+
+* Expressions with `{...}` are evaluated at compile time.  
+* These can contain any R expression, but would most often be used to 
+  calculate offsets from known address labels, e.g.
+    * if `border = $d020`, then `sta {border + 1}` is equivalent to `sta $d021`
+* In other assemblers, `*` is used to refer to the program counter/current address
+  in this type of operation.  However, in order to avoid clashes with the multiplication
+  operator, within an evaluated expression use `.*` instead.  A bare `*` will be 
+  treated as a normal multiply.

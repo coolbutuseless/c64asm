@@ -1,0 +1,238 @@
+---
+title: "Hello World - compilation details"
+author: "mikefc@coolbutuseless.com"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Hello World - compilation details}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(purrr)
+  library(c64asm)  
+})
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+Write your c64 ASM code
+------------------------------------------------------------------------------
+
+* The syntax is roughly modelled on that of TASS64, but only for the fundamentals i.e.
+    * `*` refers to current address location, and can be read from or written to
+    * All programs should start with a `*=....` line to set the starting address
+    * `.byte` values must be hexadecimal only, and single byte hexadecimal must **always**
+      include 2 characters.  i.e. `$0e` will work, but `$e` won't work.
+    * Similarly, for immediate values. i.e. `#$01` will work. `#$1` won't work.
+
+```{r}
+library(dplyr)
+library(c64asm)
+
+asm <- '
+*=$0801
+  .byte $0c, $08, $0a, $00, $9e, $20
+  .byte $32, $30, $38, $30, $00, $00
+  .byte $00
+
+*=$0820
+      ldx #$00
+loop  lda message,x
+      and #$3f
+      sta $0400,x
+      inx
+      cpx #$0c
+      bne loop
+
+      rts
+
+message
+    .text "Hello World!"
+'
+```
+
+
+c64asm defines a set of tokens in the ASM file
+------------------------------------------------------------------------------
+
+* `c64asm::asm_patterns` defines the set of patterns for lexing/tokenising an ASM file
+* Things to note:
+    * upper or lower-case opcodes are allowed, but not mixed-case
+    * No decimal representation is supported, everything should be in hexadecimal
+    * A bare `*` is interpreted as the program counter (i.e. current address)
+* Custom R features
+    * `.rbyte` directive. similar to the standard `.byte`, but the bytes come from the
+      next token in the stream which must be a variable name which contains integers
+      in the range 0-255.
+    * `.rtext` directive. Similar to the standard `.text`, but the text comes from the 
+      next token in the stream which must be a variable name which contains a string.
+    * `{...}` represents text to be evaluated. Used for symbol arithmetic. e.g. `lda {message},1`
+
+```{r}
+#-----------------------------------------------------------------------------
+# Regex patterns for parsing 6502 assembly
+#-----------------------------------------------------------------------------
+asm_patterns <- c(
+  newline    = '\n',
+  whitespace = '\\s+',
+  PC         = '\\*',
+  immediate  = '#\\$[0-9a-fA-F]{1,2}',
+  word       = '\\$[0-9a-fA-F]{3,4}',
+  byte       = '\\$[0-9a-fA-F]{1,2}',
+  opcode     = "\\b(ADC|AHX|ALR|ANC|AND|ARR|ASL|AXS|BCC|BCS|BEQ|BIT|BMI|BNE|BPL|BRK|BVC|BVS|CLC|CLD|CLI|CLV|CMP|CPX|CPY|DCP|DEC|DEX|DEY|EOR|INC|INX|INY|ISC|JMP|JSR|LAS|LAX|LAX|LDA|LDX|LDY|LSR|NOP|ORA|PHA|PHP|PLA|PLP|RLA|ROL|ROR|RRA|RTI|RTS|SAX|SBC|SEC|SED|SEI|SHX|SHY|SLO|SRE|STA|STX|STY|TAS|TAX|TAY|TSX|TXA|TXS|TYA|XAA|adc|ahx|alr|anc|and|arr|asl|axs|bcc|bcs|beq|bit|bmi|bne|bpl|brk|bvc|bvs|clc|cld|cli|clv|cmp|cpx|cpy|dcp|dec|dex|dey|eor|inc|inx|iny|isc|jmp|jsr|las|lax|lax|lda|ldx|ldy|lsr|nop|ora|pha|php|pla|plp|rla|rol|ror|rra|rti|rts|sax|sbc|sec|sed|sei|shx|shy|slo|sre|sta|stx|sty|tas|tax|tay|tsx|txa|txs|tya|xaa)\\b",
+  byte_inst  = '\\.byte',
+  text_inst  = '\\.text',
+  rtext_inst = '\\.rtext',
+  rbyte_inst = '\\.rbyte',
+  lbracket   = '\\(',
+  rbracket   = '\\)',
+  text       = '".*?"',
+  comma      = ",",
+  colon      = ":",
+  equals     = '=',
+  comment    = '(;[^\n]*)',
+  x          = '(x|X)',
+  y          = '(y|Y)',
+  symbol     = '#?<?>?\\{.*?\\}',  # a symbol with evaluation
+  symbol     = '[^\\s:,)]+'
+)
+```
+
+
+
+
+Each line is split into tokens
+------------------------------------------------------------------------------
+
+* Each line is split into tokens
+* any `comma`, `whitespace` or `comment` tokens are discarded
+* any blank lines are discarded
+
+```{r}
+line_tokens <- c64asm::create_line_tokens(asm)
+line_tokens
+```
+
+
+The main `prg_df` data structure is created from `line_tokens`
+------------------------------------------------------------------------------
+
+* All the computation/passes necessary to turn the ASM into actual bytes for PRG file
+  take place as operations on this `prg_df` data.frame
+* There are lots of columns here keeping track of values, cross-references to symbols and
+  different representations of the values e.g. in both hexadecimal and decimal
+
+
+```{r}
+prg_df <- c64asm::create_prg_df(line_tokens)
+```
+
+```{r echo=FALSE}
+prg_df %>% 
+  select(-argbytes, -label_value, -op, -opcommand, -nargbytes, -nopbytes) %>%
+  knitr::kable()
+```
+
+
+Calculate addresses and replace any symbols with these values
+------------------------------------------------------------------------------
+
+* symbols (such as `message`) may have their values defined by
+    * their address, i.e. position in the bytestream relative to the start of the file
+    * explicitly assigned a value e.g. `storage = $3000`
+* Since the actual instruction address might only be specified at the very start of the file (using `* = $0820` for example), 
+  then byte counting is used to figure out the address of all subsequent instructions.
+
+```{r}
+prg_df <- c64asm::process_symbols(prg_df)
+```
+
+```{r echo=FALSE}
+prg_df %>% 
+  select(-argbytes, -hexbytes, -label_value, -op, -symbol_op, -nopbytes, -nargbytes, -opcommand, -init_addr) %>% 
+  select(-symbol_lo, -symbol_hi, -symbol_offset, -row_symbol_values) %>%
+  knitr::kable()
+```
+
+
+
+
+
+
+Add zero padding so there are no gaps
+------------------------------------------------------------------------------
+
+* PRG files must represent a contiguous sequence of bytes - no gaps allowed!
+* Find and insert sequences of zeros to ensure all gaps are filled.
+
+```{r}
+prg_df <- c64asm::process_zero_padding(prg_df)
+```
+
+```{r echo=FALSE}
+prg_df %>% 
+  select(-argbytes, -hexbytes, -label_value, -op, -symbol_op, -nopbytes, -nargbytes, -opcommand, -init_addr) %>% 
+  select(-symbol_lo, -symbol_hi, -symbol_offset, -row_symbol_values) %>%
+  knitr::kable()
+```
+
+
+Extract the bytes from `prg_df`
+------------------------------------------------------------------------------
+
+* `prg_df$bytes` is a list column which represents all the instruction bytes which 
+  make up a PRG file.
+* Use `purrr::flatten()` to convert to an integer vector (and remove any NULL entries)
+
+```{r}
+prg_df$bytes %>%
+  purrr::flatten() %>%
+  as.integer() %>% 
+  as.raw()
+```
+
+
+
+
+Add the loading address to get the complete PRG
+------------------------------------------------------------------------------
+
+* PRG files are prefixed by their first address so they can be loaded in the 
+  right location.
+* Take the first address in `prg_df` and convert it to 2 bytes in low-byte/high-byte
+  format using `c64asm::w2b()`
+
+
+```{r}
+# The following is equivalent to:  c64asm::extract_prg_bytes(prg_df)
+as.raw(c(w2b(prg_df$addr[1]), as.integer(purrr::flatten(prg_df$bytes))))
+```
+
+
+Save the PRG
+------------------------------------------------------------------------------
+
+* Just write the bytes, with the loading address prefixed, 
+directly to file with `writeBin()` - no other processing is needed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+

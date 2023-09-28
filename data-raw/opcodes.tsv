@@ -1,0 +1,218 @@
+op	desc	N	V	B	D	I	Z	C	type	mode	hex	opmode	mode_template	dec
+brk	(S)-:=PC,P PC:=($FFFE)			1		1			jump	imp	$00	implied	NA	0
+ora	A:=A or {adr}	*					*		logical	izx	$01	indirect x	($00,X)	1
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	izx	$03	indirect x	($00,X)	3
+ora	A:=A or {adr}	*					*		logical	zp	$05	zero page	$00	5
+asl	{adr}:={adr}*2	*					*	*	logical	zp	$06	zero page	$00	6
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	zp	$07	zero page	$00	7
+php	(S)-:=P								move	imp	$08	implied	NA	8
+ora	A:=A or {adr}	*					*		logical	imm	$09	immediate	#$00	9
+asl	{adr}:={adr}*2	*					*	*	logical	imp	$0A	implied	NA	10
+anc	A:=A&#{imm}	*					*	*	illegal	imm	$0B	immediate	#$00	11
+ora	A:=A or {adr}	*					*		logical	abs	$0D	absolute	$0000	13
+asl	{adr}:={adr}*2	*					*	*	logical	abs	$0E	absolute	$0000	14
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	abs	$0F	absolute	$0000	15
+bpl	branch on N=0								jump	rel	$10	relative	$000o0	16
+ora	A:=A or {adr}	*					*		logical	izy	$11	indirect y	($00),Y	17
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	izy	$13	indirect y	($00),Y	19
+ora	A:=A or {adr}	*					*		logical	zpx	$15	zero page x	$00,X	21
+asl	{adr}:={adr}*2	*					*	*	logical	zpx	$16	zero page x	$00,X	22
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	zpx	$17	zero page x	$00,X	23
+clc	C:=0							0	jump	imp	$18	implied	NA	24
+ora	A:=A or {adr}	*					*		logical	aby	$19	absolute y	$0000,Y	25
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	aby	$1B	absolute y	$0000,Y	27
+ora	A:=A or {adr}	*					*		logical	abx	$1D	absolute x	$0000,X	29
+asl	{adr}:={adr}*2	*					*	*	logical	abx	$1E	absolute x	$0000,X	30
+slo	{adr}:={adr}*2 A:=A or {adr}	*					*	*	illegal	abx	$1F	absolute x	$0000,X	31
+jsr	(S)-:=PC PC:={adr}								jump	abs	$20	absolute	$0000	32
+and	A:=A&{adr}	*					*		logical	izx	$21	indirect x	($00,X)	33
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	izx	$23	indirect x	($00,X)	35
+bit	N:=b7 V:=b6 Z:=A&{adr}	*	*				*		jump	zp	$24	zero page	$00	36
+and	A:=A&{adr}	*					*		logical	zp	$25	zero page	$00	37
+rol	{adr}:={adr}*2+C	*					*	*	logical	zp	$26	zero page	$00	38
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	zp	$27	zero page	$00	39
+plp	P:=+(S)	*	*		*	*	*	*	move	imp	$28	implied	NA	40
+and	A:=A&{adr}	*					*		logical	imm	$29	immediate	#$00	41
+rol	{adr}:={adr}*2+C	*					*	*	logical	imp	$2A	implied	NA	42
+anc	A:=A&#{imm}	*					*	*	illegal	imm	$2B	immediate	#$00	43
+bit	N:=b7 V:=b6 Z:=A&{adr}	*	*				*		jump	abs	$2C	absolute	$0000	44
+and	A:=A&{adr}	*					*		logical	abs	$2D	absolute	$0000	45
+rol	{adr}:={adr}*2+C	*					*	*	logical	abs	$2E	absolute	$0000	46
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	abs	$2F	absolute	$0000	47
+bmi	branch on N=1								jump	rel	$30	relative	$000o0	48
+and	A:=A&{adr}	*					*		logical	izy	$31	indirect y	($00),Y	49
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	izy	$33	indirect y	($00),Y	51
+and	A:=A&{adr}	*					*		logical	zpx	$35	zero page x	$00,X	53
+rol	{adr}:={adr}*2+C	*					*	*	logical	zpx	$36	zero page x	$00,X	54
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	zpx	$37	zero page x	$00,X	55
+sec	C:=1							1	jump	imp	$38	implied	NA	56
+and	A:=A&{adr}	*					*		logical	aby	$39	absolute y	$0000,Y	57
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	aby	$3B	absolute y	$0000,Y	59
+and	A:=A&{adr}	*					*		logical	abx	$3D	absolute x	$0000,X	61
+rol	{adr}:={adr}*2+C	*					*	*	logical	abx	$3E	absolute x	$0000,X	62
+rla	{adr}:={adr}rol A:=A and {adr}	*					*	*	illegal	abx	$3F	absolute x	$0000,X	63
+rti	P,PC:=+(S)	*	*		*	*	*	*	jump	imp	$40	implied	NA	64
+eor	A:=A exor {adr}	*					*		logical	izx	$41	indirect x	($00,X)	65
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	izx	$43	indirect x	($00,X)	67
+eor	A:=A exor {adr}	*					*		logical	zp	$45	zero page	$00	69
+lsr	{adr}:={adr}/2	*					*	*	logical	zp	$46	zero page	$00	70
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	zp	$47	zero page	$00	71
+pha	(S)-:=A								move	imp	$48	implied	NA	72
+eor	A:=A exor {adr}	*					*		logical	imm	$49	immediate	#$00	73
+lsr	{adr}:={adr}/2	*					*	*	logical	imp	$4A	implied	NA	74
+alr	A:=(A&#{imm})/2	*					*	*	illegal	imm	$4B	immediate	#$00	75
+jmp	PC:={adr}								jump	abs	$4C	absolute	$0000	76
+eor	A:=A exor {adr}	*					*		logical	abs	$4D	absolute	$0000	77
+lsr	{adr}:={adr}/2	*					*	*	logical	abs	$4E	absolute	$0000	78
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	abs	$4F	absolute	$0000	79
+bvc	branch on V=0								jump	rel	$50	relative	$000o0	80
+eor	A:=A exor {adr}	*					*		logical	izy	$51	indirect y	($00),Y	81
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	izy	$53	indirect y	($00),Y	83
+eor	A:=A exor {adr}	*					*		logical	zpx	$55	zero page x	$00,X	85
+lsr	{adr}:={adr}/2	*					*	*	logical	zpx	$56	zero page x	$00,X	86
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	zpx	$57	zero page x	$00,X	87
+cli	I:=0					0			jump	imp	$58	implied	NA	88
+eor	A:=A exor {adr}	*					*		logical	aby	$59	absolute y	$0000,Y	89
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	aby	$5B	absolute y	$0000,Y	91
+eor	A:=A exor {adr}	*					*		logical	abx	$5D	absolute x	$0000,X	93
+lsr	{adr}:={adr}/2	*					*	*	logical	abx	$5E	absolute x	$0000,X	94
+sre	{adr}:={adr}/2 A:=A exor {adr}	*					*	*	illegal	abx	$5F	absolute x	$0000,X	95
+rts	PC:=+(S)								jump	imp	$60	implied	NA	96
+adc	A:=A+{adr}	*	*				*	*	logical	izx	$61	indirect x	($00,X)	97
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	izx	$63	indirect x	($00,X)	99
+adc	A:=A+{adr}	*	*				*	*	logical	zp	$65	zero page	$00	101
+ror	{adr}:={adr}/2+C*128	*					*	*	logical	zp	$66	zero page	$00	102
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	zp	$67	zero page	$00	103
+pla	A:=+(S)	*					*		move	imp	$68	implied	NA	104
+adc	A:=A+{adr}	*	*				*	*	logical	imm	$69	immediate	#$00	105
+ror	{adr}:={adr}/2+C*128	*					*	*	logical	imp	$6A	implied	NA	106
+arr	A:=(A&#{imm})/2	*	*				*	*	illegal	imm	$6B	immediate	#$00	107
+jmp	PC:={adr}								jump	ind	$6C	indirect	($0000)	108
+adc	A:=A+{adr}	*	*				*	*	logical	abs	$6D	absolute	$0000	109
+ror	{adr}:={adr}/2+C*128	*					*	*	logical	abs	$6E	absolute	$0000	110
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	abs	$6F	absolute	$0000	111
+bvs	branch on V=1								jump	rel	$70	relative	$000o0	112
+adc	A:=A+{adr}	*	*				*	*	logical	izy	$71	indirect y	($00),Y	113
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	izy	$73	indirect y	($00),Y	115
+adc	A:=A+{adr}	*	*				*	*	logical	zpx	$75	zero page x	$00,X	117
+ror	{adr}:={adr}/2+C*128	*					*	*	logical	zpx	$76	zero page x	$00,X	118
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	zpx	$77	zero page x	$00,X	119
+sei	I:=1					1			jump	imp	$78	implied	NA	120
+adc	A:=A+{adr}	*	*				*	*	logical	aby	$79	absolute y	$0000,Y	121
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	aby	$7B	absolute y	$0000,Y	123
+adc	A:=A+{adr}	*	*				*	*	logical	abx	$7D	absolute x	$0000,X	125
+ror	{adr}:={adr}/2+C*128	*					*	*	logical	abx	$7E	absolute x	$0000,X	126
+rra	{adr}:={adr}ror A:=A adc {adr}	*	*				*	*	illegal	abx	$7F	absolute x	$0000,X	127
+sta	{adr}:=A								move	izx	$81	indirect x	($00,X)	129
+sax	{adr}:=A&X								illegal	izx	$83	indirect x	($00,X)	131
+sty	{adr}:=Y								move	zp	$84	zero page	$00	132
+sta	{adr}:=A								move	zp	$85	zero page	$00	133
+stx	{adr}:=X								move	zp	$86	zero page	$00	134
+sax	{adr}:=A&X								illegal	zp	$87	zero page	$00	135
+dey	Y:=Y-1	*					*		logical	imp	$88	implied	NA	136
+txa	A:=X	*					*		move	imp	$8A	implied	NA	138
+xaa²	A:=X&#{imm}	*					*		illegal	imm	$8B	immediate	#$00	139
+sty	{adr}:=Y								move	abs	$8C	absolute	$0000	140
+sta	{adr}:=A								move	abs	$8D	absolute	$0000	141
+stx	{adr}:=X								move	abs	$8E	absolute	$0000	142
+sax	{adr}:=A&X								illegal	abs	$8F	absolute	$0000	143
+bcc	branch on C=0								jump	rel	$90	relative	$000o0	144
+sta	{adr}:=A								move	izy	$91	indirect y	($00),Y	145
+ahx¹	{adr}:=A&X&H								illegal	izy	$93	indirect y	($00),Y	147
+sty	{adr}:=Y								move	zpx	$94	zero page x	$00,X	148
+sta	{adr}:=A								move	zpx	$95	zero page x	$00,X	149
+stx	{adr}:=X								move	zpy	$96	zero page y	$00,Y	150
+sax	{adr}:=A&X								illegal	zpy	$97	zero page y	$00,Y	151
+tya	A:=Y	*					*		move	imp	$98	implied	NA	152
+sta	{adr}:=A								move	aby	$99	absolute y	$0000,Y	153
+txs	S:=X								move	imp	$9A	implied	NA	154
+tas¹	S:=A&X {adr}:=S&H								illegal	aby	$9B	absolute y	$0000,Y	155
+shy¹	{adr}:=Y&H								illegal	abx	$9C	absolute x	$0000,X	156
+sta	{adr}:=A								move	abx	$9D	absolute x	$0000,X	157
+shx¹	{adr}:=X&H								illegal	aby	$9E	absolute y	$0000,Y	158
+ahx¹	{adr}:=A&X&H								illegal	aby	$9F	absolute y	$0000,Y	159
+ldy	Y:={adr}	*					*		move	imm	$A0	immediate	#$00	160
+lda	A:={adr}	*					*		move	izx	$A1	indirect x	($00,X)	161
+ldx	X:={adr}	*					*		move	imm	$A2	immediate	#$00	162
+lax	A,X:={adr}	*					*		illegal	izx	$A3	indirect x	($00,X)	163
+ldy	Y:={adr}	*					*		move	zp	$A4	zero page	$00	164
+lda	A:={adr}	*					*		move	zp	$A5	zero page	$00	165
+ldx	X:={adr}	*					*		move	zp	$A6	zero page	$00	166
+lax	A,X:={adr}	*					*		illegal	zp	$A7	zero page	$00	167
+tay	Y:=A	*					*		move	imp	$A8	implied	NA	168
+lda	A:={adr}	*					*		move	imm	$A9	immediate	#$00	169
+tax	X:=A	*					*		move	imp	$AA	implied	NA	170
+lax²	A,X:=#{imm}	*					*		illegal	imm	$AB	immediate	#$00	171
+ldy	Y:={adr}	*					*		move	abs	$AC	absolute	$0000	172
+lda	A:={adr}	*					*		move	abs	$AD	absolute	$0000	173
+ldx	X:={adr}	*					*		move	abs	$AE	absolute	$0000	174
+lax	A,X:={adr}	*					*		illegal	abs	$AF	absolute	$0000	175
+bcs	branch on C=1								jump	rel	$B0	relative	$000o0	176
+lda	A:={adr}	*					*		move	izy	$B1	indirect y	($00),Y	177
+lax	A,X:={adr}	*					*		illegal	izy	$B3	indirect y	($00),Y	179
+ldy	Y:={adr}	*					*		move	zpx	$B4	zero page x	$00,X	180
+lda	A:={adr}	*					*		move	zpx	$B5	zero page x	$00,X	181
+ldx	X:={adr}	*					*		move	zpy	$B6	zero page y	$00,Y	182
+lax	A,X:={adr}	*					*		illegal	zpy	$B7	zero page y	$00,Y	183
+clv	V:=0		0						jump	imp	$B8	implied	NA	184
+lda	A:={adr}	*					*		move	aby	$B9	absolute y	$0000,Y	185
+tsx	X:=S	*					*		move	imp	$BA	implied	NA	186
+las	A,X,S:={adr}&S	*					*		illegal	aby	$BB	absolute y	$0000,Y	187
+ldy	Y:={adr}	*					*		move	abx	$BC	absolute x	$0000,X	188
+lda	A:={adr}	*					*		move	abx	$BD	absolute x	$0000,X	189
+ldx	X:={adr}	*					*		move	aby	$BE	absolute y	$0000,Y	190
+lax	A,X:={adr}	*					*		illegal	aby	$BF	absolute y	$0000,Y	191
+cpy	Y-{adr}	*					*	*	logical	imm	$C0	immediate	#$00	192
+cmp	A-{adr}	*					*	*	logical	izx	$C1	indirect x	($00,X)	193
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	izx	$C3	indirect x	($00,X)	195
+cpy	Y-{adr}	*					*	*	logical	zp	$C4	zero page	$00	196
+cmp	A-{adr}	*					*	*	logical	zp	$C5	zero page	$00	197
+dec	{adr}:={adr}-1	*					*		logical	zp	$C6	zero page	$00	198
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	zp	$C7	zero page	$00	199
+iny	Y:=Y+1	*					*		logical	imp	$C8	implied	NA	200
+cmp	A-{adr}	*					*	*	logical	imm	$C9	immediate	#$00	201
+dex	X:=X-1	*					*		logical	imp	$CA	implied	NA	202
+axs	X:=A&X-#{imm}	*					*	*	illegal	imm	$CB	immediate	#$00	203
+cpy	Y-{adr}	*					*	*	logical	abs	$CC	absolute	$0000	204
+cmp	A-{adr}	*					*	*	logical	abs	$CD	absolute	$0000	205
+dec	{adr}:={adr}-1	*					*		logical	abs	$CE	absolute	$0000	206
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	abs	$CF	absolute	$0000	207
+bne	branch on Z=0								jump	rel	$D0	relative	$000o0	208
+cmp	A-{adr}	*					*	*	logical	izy	$D1	indirect y	($00),Y	209
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	izy	$D3	indirect y	($00),Y	211
+cmp	A-{adr}	*					*	*	logical	zpx	$D5	zero page x	$00,X	213
+dec	{adr}:={adr}-1	*					*		logical	zpx	$D6	zero page x	$00,X	214
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	zpx	$D7	zero page x	$00,X	215
+cld	D:=0				0				jump	imp	$D8	implied	NA	216
+cmp	A-{adr}	*					*	*	logical	aby	$D9	absolute y	$0000,Y	217
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	aby	$DB	absolute y	$0000,Y	219
+cmp	A-{adr}	*					*	*	logical	abx	$DD	absolute x	$0000,X	221
+dec	{adr}:={adr}-1	*					*		logical	abx	$DE	absolute x	$0000,X	222
+dcp	{adr}:={adr}-1 A-{adr}	*					*	*	illegal	abx	$DF	absolute x	$0000,X	223
+cpx	X-{adr}	*					*	*	logical	imm	$E0	immediate	#$00	224
+sbc	A:=A-{adr}	*	*				*	*	logical	izx	$E1	indirect x	($00,X)	225
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	izx	$E3	indirect x	($00,X)	227
+cpx	X-{adr}	*					*	*	logical	zp	$E4	zero page	$00	228
+sbc	A:=A-{adr}	*	*				*	*	logical	zp	$E5	zero page	$00	229
+inc	{adr}:={adr}+1	*					*		logical	zp	$E6	zero page	$00	230
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	zp	$E7	zero page	$00	231
+inx	X:=X+1	*					*		logical	imp	$E8	implied	NA	232
+sbc	A:=A-{adr}	*	*				*	*	logical	imm	$E9	immediate	#$00	233
+nop									jump	imp	$EA	implied	NA	234
+sbc	A:=A-#{imm}	*	*				*	*	illegal	imm	$EB	immediate	#$00	235
+cpx	X-{adr}	*					*	*	logical	abs	$EC	absolute	$0000	236
+sbc	A:=A-{adr}	*	*				*	*	logical	abs	$ED	absolute	$0000	237
+inc	{adr}:={adr}+1	*					*		logical	abs	$EE	absolute	$0000	238
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	abs	$EF	absolute	$0000	239
+beq	branch on Z=1								jump	rel	$F0	relative	$000o0	240
+sbc	A:=A-{adr}	*	*				*	*	logical	izy	$F1	indirect y	($00),Y	241
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	izy	$F3	indirect y	($00),Y	243
+sbc	A:=A-{adr}	*	*				*	*	logical	zpx	$F5	zero page x	$00,X	245
+inc	{adr}:={adr}+1	*					*		logical	zpx	$F6	zero page x	$00,X	246
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	zpx	$F7	zero page x	$00,X	247
+sed	D:=1				1				jump	imp	$F8	implied	NA	248
+sbc	A:=A-{adr}	*	*				*	*	logical	aby	$F9	absolute y	$0000,Y	249
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	aby	$FB	absolute y	$0000,Y	251
+sbc	A:=A-{adr}	*	*				*	*	logical	abx	$FD	absolute x	$0000,X	253
+inc	{adr}:={adr}+1	*					*		logical	abx	$FE	absolute x	$0000,X	254
+isc	{adr}:={adr}+1 A:=A-{adr}	*	*				*	*	illegal	abx	$FF	absolute x	$0000,X	255

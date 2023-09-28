@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^working$
+^README.Rmd$
+^README.html$
+^prg$
+^docs$
+^working$
+^doc$
+^Meta$
